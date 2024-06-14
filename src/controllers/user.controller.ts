@@ -16,6 +16,8 @@ import {inject} from '@loopback/core';
 import {model, property, repository} from '@loopback/repository';
 import {
   get,
+  RestBindings,
+  Request,
   getModelSchemaRef,
   post,
   requestBody,
@@ -97,6 +99,9 @@ export class UserController {
 
     // create a JSON Web Token based on the user profile
     const token = await this.jwtService.generateToken(userProfile);
+
+
+
     return {token};
   }
 
@@ -118,8 +123,27 @@ export class UserController {
   async whoAmI(
     @inject(SecurityBindings.USER)
     currentUserProfile: UserProfile,
-  ): Promise<string> {
-    return currentUserProfile[securityId];
+    @inject(RestBindings.Http.REQUEST) request: Request,
+  ): Promise<User> {
+
+
+    const authHeader = request.headers['authorization'];
+
+    if (authHeader) {
+      console.log('Received token:', authHeader);
+    } else {
+      console.log('No token found in request headers.');
+    }
+
+    let cup = currentUserProfile[securityId];
+
+    console.log("whoAMI");
+    console.log(securityId);
+    console.log(cup);
+
+    return this.userRepository.findById(cup);
+
+
   }
 
   @post('/signup', {
